@@ -8,4 +8,10 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()]
   }),
+  manifest: {
+    name: "Sunmarize",
+    description: "Summarize web pages with ease",
+    version: "1.0.0",
+    permissions: ["activeTab", "scripting", "storage"],
+  }
 });
