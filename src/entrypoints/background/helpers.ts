@@ -33,7 +33,7 @@ export async function getSelectedModel() {
   return modelConfig;
 }
 
-export async function summarize(text: string, port: Browser.runtime.Port, { apiURL, model, apiKey }: ModelConfig) {
+export async function summarize(text: string, { apiURL, model, apiKey }: ModelConfig, port: Browser.runtime.Port) {
   const response = await fetch(apiURL, {
     method: "POST",
     headers: {
@@ -54,52 +54,32 @@ export async function summarize(text: string, port: Browser.runtime.Port, { apiU
     throw new Error("Failed to summarize text");
   }
 
-  return response.body.getReader();
+  const decoderStream = new TextDecoderStream("utf-8");
+  const writer = new WritableStream({
+    write(chunk: string) {
+      const messages = parseChunk(chunk);
+      for (const message of messages) {
+        port.postMessage({ final: false, content: message });
+      }
+    },
+  });
+
+  await response.body.pipeThrough(decoderStream).pipeTo(writer);
 }
 
-// Send summary to the popup as it's being decoded
-export async function streamResults(reader: ReadableStreamDefaultReader<Uint8Array>, port: Browser.runtime.Port) {
-  const decoder = new TextDecoder();
+function parseChunk(chunk: string) {
+  const lines = chunk.split("\n");
+  const messages: string[] = [];
 
-  try {
-    // Read chunks until complete
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-
-      // Parse SSE format properly
-      const lines = chunk.split("\n");
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6); // Remove "data: " prefix
-
-          // Skip empty lines and [DONE] marker
-          if (data.trim() === "" || data.trim() === "[DONE]") continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-
-            if (content) {
-              port.postMessage({ final: false, content });
-            }
-          } catch (parseError) {
-            console.warn("Failed to parse SSE data:", parseError);
-          }
-        }
+  for (const line of lines) {
+    if (line.startsWith("data: ") && !line.startsWith("data: [DONE]")) {
+      const data = line.slice(6);
+      const content: string = JSON.parse(data).choices[0].delta.content;
+      if (content) {
+        messages.push(content);
       }
     }
-  } catch (error) {
-    console.error("Stream reading error:", error);
-    port.postMessage({
-      final: true,
-      content: "Error reading stream: " + (error as Error).message,
-    });
-    return;
   }
 
-  // Send a message to close the port
-  port.postMessage({ final: true });
+  return messages;
 }

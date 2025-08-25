@@ -12,7 +12,7 @@ export enum ModelOption {
 export const MODEL_CONFIGS: Record<ModelOption, ModelConfig> = {
   [ModelOption.OPENAI]: {
     apiURL: "https://api.openai.com/v1/chat/completions",
-    model: "gpt-5-nano",
+    model: "gpt-4o-mini",
     apiKey: OPENAI_API_KEY,
   },
   [ModelOption.GEMINI]: {

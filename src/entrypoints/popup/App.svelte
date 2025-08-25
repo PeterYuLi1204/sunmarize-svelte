@@ -2,17 +2,29 @@
   import { onMount } from "svelte";
   import { ModelOption } from "../../utils/config";
 
-  let summary = $state("");
+  let model = $state(ModelOption.GEMINI);
+  const summary = $state([""]);
+
+  function displaySummary(text: string) {
+    for (const c of text) {
+      if (c === ";") {
+        summary.push("");
+      } else {
+        const isEmptyLine = summary[summary.length - 1].trim() === "";
+        summary[summary.length - 1] += isEmptyLine ? c.toUpperCase() : c;
+      }
+    }
+  }
 
   function runSummary() {
     const port = browser.runtime.connect(undefined, { name: "popup" });
     port.postMessage({ content: "Sunmarize" });
 
-    const handleMessage = (msg: any) => {
+    const handleMessage = (msg: { final: boolean; content?: string }) => {
       if (msg.final) {
         cleanup();
       } else if (msg.content !== undefined) {
-        summary += msg.content;
+        displaySummary(msg.content);
       }
     };
 
@@ -27,10 +39,11 @@
   }
 
   async function loadModel() {
-    let model: ModelOption = (await browser.storage.local.get(["model"])).model;
-    if (!model) {
-      await browser.storage.local.set({ model: ModelOption.OPENAI });
-      model = ModelOption.OPENAI;
+    const storageModel = (await browser.storage.local.get(["model"])).model as ModelOption;
+    if (!storageModel) {
+      await browser.storage.local.set({ model: ModelOption.GEMINI });
+    } else {
+      model = storageModel;
     }
   }
 
@@ -41,6 +54,30 @@
   });
 </script>
 
-<main class="min-w-[450px] min-h-[450px] p-8 flex flex-col items-center justify-start">
-  <div>{summary}</div>
+<main class="w-[450px] h-[450px] p-8 flex flex-col justify-start text-base">
+  <ul class="flex-1 list-disc list-inside overflow-y-auto">
+    {#each summary as point}
+      <li>{point}</li>
+    {/each}
+  </ul>
+
+  <div class="flex gap-2 self-center">
+    {#each [ModelOption.GEMINI, ModelOption.OPENAI] as modelOption}
+      <input
+        type="radio"
+        id={modelOption}
+        name="model"
+        value={modelOption}
+        checked={modelOption === model}
+        onclick={async (e) => {
+          summary.length = 0;
+          const value = (e.target as HTMLInputElement)?.value as ModelOption;
+          await browser.storage.local.set({ model: value });
+          model = value;
+          runSummary();
+        }}
+      />
+      <label for={modelOption} class="capitalize">{modelOption}</label>
+    {/each}
+  </div>
 </main>

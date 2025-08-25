@@ -1,13 +1,13 @@
-import { retrieveText, summarize, getSelectedModel, streamResults } from "@/entrypoints/background/helpers.js";
+import { retrieveText, summarize, getSelectedModel } from "@/entrypoints/background/helpers.js";
 
 export default defineBackground(() => {
   browser.runtime.onConnect.addListener((port) => {
-    port.onMessage.addListener(async (msg) => {
+    port.onMessage.addListener(async (msg: { content: string }) => {
       if (msg.content === "Sunmarize") {
         try {
           const articleText = await retrieveText();
-          const reader = await summarize(articleText, port, await getSelectedModel());
-          streamResults(reader, port);
+          await summarize(articleText, await getSelectedModel(), port);
+          port.postMessage({ final: true });
         } catch (error) {
           console.error(error);
           port.postMessage({
