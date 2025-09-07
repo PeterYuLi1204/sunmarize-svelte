@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { ModelOption } from "../../utils/config";
+  import { ModelOption } from "../../utils/interfaces";
+  import { DEFAULT_MODEL } from "../../utils/config";
 
-  let model = $state(ModelOption.GEMINI);
+  let model = $state(DEFAULT_MODEL);
   const summary = $state([""]);
 
   function displaySummary(text: string) {
@@ -41,7 +42,7 @@
   async function loadModel() {
     const storageModel = (await browser.storage.local.get(["model"])).model as ModelOption;
     if (!storageModel) {
-      await browser.storage.local.set({ model: ModelOption.GEMINI });
+      await browser.storage.local.set({ model: DEFAULT_MODEL });
     } else {
       model = storageModel;
     }

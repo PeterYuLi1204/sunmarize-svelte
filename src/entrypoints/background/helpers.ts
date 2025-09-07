@@ -1,5 +1,5 @@
-import { ModelOption, MODEL_CONFIGS, PROMPT } from "@/utils/config";
-import { ModelConfig } from "@/utils/interfaces";
+import { GEMINI_URL, OPENAI_URL } from "@/utils/config";
+import { ModelOption } from "@/utils/interfaces";
 
 export async function retrieveText() {
   // Find the active tab
@@ -23,31 +23,23 @@ export async function retrieveText() {
   return articleText;
 }
 
-export async function getSelectedModel() {
-  const model: ModelOption = (await browser.storage.local.get(["model"])).model;
-  const modelConfig = MODEL_CONFIGS[model];
-  if (!modelConfig) {
-    throw new Error("Invalid model configuration");
+export async function getModelUrl() {
+  const model = await browser.storage.local.get("model");
+  if (model.model === ModelOption.GEMINI) {
+    return GEMINI_URL;
+  } else {
+    return OPENAI_URL;
   }
-
-  return modelConfig;
 }
 
-export async function summarize(text: string, { apiURL, model, apiKey }: ModelConfig, port: Browser.runtime.Port) {
+export async function summarize(text: string, port: Browser.runtime.Port) {
+  const apiURL = await getModelUrl();
   const response = await fetch(apiURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: "system", content: PROMPT },
-        { role: "user", content: text },
-      ],
-      stream: true,
-    }),
+    body: JSON.stringify({ text }),
   });
 
   if (!response.ok || !response.body) {
@@ -55,31 +47,11 @@ export async function summarize(text: string, { apiURL, model, apiKey }: ModelCo
   }
 
   const decoderStream = new TextDecoderStream("utf-8");
-  const writer = new WritableStream({
-    write(chunk: string) {
-      const messages = parseChunk(chunk);
-      for (const message of messages) {
-        port.postMessage({ final: false, content: message });
-      }
-    },
-  });
+  const reader = response.body.pipeThrough(decoderStream).getReader();
 
-  await response.body.pipeThrough(decoderStream).pipeTo(writer);
-}
-
-function parseChunk(chunk: string) {
-  const lines = chunk.split("\n");
-  const messages: string[] = [];
-
-  for (const line of lines) {
-    if (line.startsWith("data: ") && !line.startsWith("data: [DONE]")) {
-      const data = line.slice(6);
-      const content: string = JSON.parse(data).choices[0].delta.content;
-      if (content) {
-        messages.push(content);
-      }
-    }
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    port.postMessage({ final: false, content: value });
   }
-
-  return messages;
 }

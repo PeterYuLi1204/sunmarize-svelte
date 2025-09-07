@@ -1,5 +1,4 @@
-export type ModelConfig = {
-  apiURL: string;
-  model: string;
-  apiKey: string;
-};
+export enum ModelOption {
+  OPENAI = "openai",
+  GEMINI = "gemini",
+}

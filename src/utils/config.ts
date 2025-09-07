@@ -1,23 +1,8 @@
-import { ModelConfig } from "./interfaces.js";
-import { OPENAI_API_KEY, GEMINI_API_KEY } from "./secrets.js";
+import { ModelOption } from "./interfaces";
 
-export const PROMPT =
-  "Summarize the following text into 1 to 8 main points, using one point per idea. Each point should be short and clear. Prioritize accuracy and relevance. Exclude any references to the news outlet, author, or unrelated stories. Format each point as a full sentence separated by semicolons. Example: 'Climate change impacts coastal cities;New policy aims to reduce emissions by 2030;Scientists urge immediate action'";
+const BACKEND_URL = process.env.NODE_ENV === "development" ? "http://localhost:4321/api/completion" : "https://sunmarize.com/api/completion";
 
-export enum ModelOption {
-  OPENAI = "openai",
-  GEMINI = "gemini",
-}
+export const OPENAI_URL = `${BACKEND_URL}/openai`;
+export const GEMINI_URL = `${BACKEND_URL}/gemini`;
 
-export const MODEL_CONFIGS: Record<ModelOption, ModelConfig> = {
-  [ModelOption.OPENAI]: {
-    apiURL: "https://api.openai.com/v1/chat/completions",
-    model: "gpt-4o-mini",
-    apiKey: OPENAI_API_KEY,
-  },
-  [ModelOption.GEMINI]: {
-    apiURL: "https://generativelanguage.googleapis.com/v1beta:chatCompletions",
-    model: "gemini-2.5-flash-lite",
-    apiKey: GEMINI_API_KEY,
-  },
-};
+export const DEFAULT_MODEL = ModelOption.OPENAI;
