@@ -43,7 +43,7 @@ export async function summarize(text: string, port: Browser.runtime.Port) {
   });
 
   if (!response.ok || !response.body) {
-    throw new Error("Failed to summarize text");
+    throw new Error(`Failed to summarize text. ${response.statusText}`);
   }
 
   const decoderStream = new TextDecoderStream("utf-8");
