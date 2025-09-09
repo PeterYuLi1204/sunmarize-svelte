@@ -4,11 +4,11 @@
   import { DEFAULT_MODEL } from "../../utils/config";
 
   let model = $state(DEFAULT_MODEL);
-  const summary = $state([""]);
+  let summary = $state([""]);
 
   function displaySummary(text: string) {
     for (const c of text) {
-      if (c === ";") {
+      if (c === "\n") {
         summary.push("");
       } else {
         const isEmptyLine = summary[summary.length - 1].trim() === "";
@@ -71,7 +71,7 @@
         value={modelOption}
         checked={modelOption === model}
         onclick={async (e) => {
-          summary.length = 0;
+          summary = [""];
           const value = (e.target as HTMLInputElement)?.value as ModelOption;
           await browser.storage.local.set({ model: value });
           model = value;
