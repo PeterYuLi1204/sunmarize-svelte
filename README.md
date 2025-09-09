@@ -1,7 +1,5 @@
-# WXT + Svelte
+# Sunmarize Svelte
 
-This template should help get you started developing with Svelte in WXT.
+Sunmarize is a browser extension that allows you to summarize articles.
 
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+This project is a svelte reimplementation of the sunmarize chrome extension.
