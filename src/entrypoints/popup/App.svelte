@@ -29,12 +29,12 @@
       }
     };
 
+    port.onMessage.addListener(handleMessage);
+
     const cleanup = () => {
       port.onMessage.removeListener(handleMessage);
       port.disconnect?.();
     };
-
-    port.onMessage.addListener(handleMessage);
 
     return cleanup;
   }
@@ -46,6 +46,14 @@
     } else {
       model = storageModel;
     }
+  }
+
+  function handleModelChange(e: Event) {
+    const value = (e.target as HTMLInputElement)?.value as ModelOption;
+    summary = [""];
+    model = value;
+    browser.storage.local.set({ model: value });
+    runSummary();
   }
 
   onMount(() => {
@@ -63,20 +71,14 @@
   </ul>
 
   <div class="flex gap-2 self-center">
-    {#each [ModelOption.GEMINI, ModelOption.OPENAI] as modelOption}
+    {#each [ModelOption.OPENAI, ModelOption.GEMINI] as modelOption}
       <input
         type="radio"
         id={modelOption}
         name="model"
         value={modelOption}
         checked={modelOption === model}
-        onclick={async (e) => {
-          summary = [""];
-          const value = (e.target as HTMLInputElement)?.value as ModelOption;
-          await browser.storage.local.set({ model: value });
-          model = value;
-          runSummary();
-        }}
+        onchange={handleModelChange}
       />
       <label for={modelOption} class="capitalize">{modelOption}</label>
     {/each}
