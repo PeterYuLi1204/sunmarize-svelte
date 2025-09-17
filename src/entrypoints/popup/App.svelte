@@ -1,10 +1,7 @@
 <script lang="ts">
   import logo from "../../assets/logo.png";
-  import { onMount } from "svelte";
-  import { ModelOption } from "../../utils/interfaces";
-  import { DEFAULT_MODEL } from "../../utils/config";
+  import ModelSelector from "./ModelSelector.svelte";
 
-  let model = $state(DEFAULT_MODEL);
   let summary = $state([""]);
 
   function displaySummary(text: string) {
@@ -40,25 +37,7 @@
     return cleanup;
   }
 
-  async function loadModel() {
-    const storageModel = (await browser.storage.local.get(["model"])).model as ModelOption;
-    if (!storageModel) {
-      await browser.storage.local.set({ model: DEFAULT_MODEL });
-    } else {
-      model = storageModel;
-    }
-  }
-
-  function handleModelChange(e: Event) {
-    const value = (e.target as HTMLInputElement)?.value as ModelOption;
-    summary = [""];
-    model = value;
-    browser.storage.local.set({ model: value });
-    runSummary();
-  }
-
   onMount(() => {
-    loadModel();
     const cleanup = runSummary();
     return cleanup;
   });
@@ -79,16 +58,11 @@
   </div>
 
   <div class="flex justify-center gap-2 w-full py-2">
-    {#each [ModelOption.OPENAI, ModelOption.GEMINI] as modelOption}
-      <input
-        type="radio"
-        id={modelOption}
-        name="model"
-        value={modelOption}
-        checked={modelOption === model}
-        onchange={handleModelChange}
-      />
-      <label for={modelOption} class="capitalize">{modelOption}</label>
-    {/each}
+    <ModelSelector
+      onModelChange={() => {
+        summary = [""];
+        runSummary();
+      }}
+    />
   </div>
 </main>
