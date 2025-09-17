@@ -1,4 +1,5 @@
 <script lang="ts">
+  import logo from "../../assets/logo.png";
   import { onMount } from "svelte";
   import { ModelOption } from "../../utils/interfaces";
   import { DEFAULT_MODEL } from "../../utils/config";
@@ -63,14 +64,21 @@
   });
 </script>
 
-<main class="w-[450px] h-[450px] p-8 flex flex-col justify-start text-base">
-  <ul class="flex-1 list-disc list-inside overflow-y-auto">
-    {#each summary as point}
-      <li>{point}</li>
-    {/each}
-  </ul>
+<main class="text-base w-[500px] h-[500px] flex flex-col justify-start">
+  <div class="flex-1 overflow-y-auto">
+    <div class="flex items-center gap-2 w-full sticky top-0 backdrop-blur-lg px-8 py-3">
+      <img src={logo} alt="Sunmarize Logo" class="w-18 h-18" />
+      <h1 class="text-2xl">Sunmarize</h1>
+    </div>
 
-  <div class="flex gap-2 self-center">
+    <ul class="list-disc list-inside px-8">
+      {#each summary as point}
+        <li>{point}</li>
+      {/each}
+    </ul>
+  </div>
+
+  <div class="flex justify-center gap-2 w-full py-2">
     {#each [ModelOption.OPENAI, ModelOption.GEMINI] as modelOption}
       <input
         type="radio"
