@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import logo from "../../assets/logo.png";
   import ModelSelector from "./ModelSelector.svelte";
 

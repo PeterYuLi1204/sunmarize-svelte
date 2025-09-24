@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ModelOption } from "../../utils/interfaces";
   import { onMount } from "svelte";
+  import { ModelOption } from "../../utils/interfaces";
   import { DEFAULT_MODEL } from "../../utils/config";
 
   let { onModelChange } = $props<{ onModelChange: () => void }>();
